@@ -1,0 +1,13 @@
+---
+
+- name: install required packages
+  ansible.builtin.package:
+    name:
+      - docker
+      - docker-compose
+    state: present
+
+- name: restart netbox
+  docker_compose:
+    project_src: "{{ netbox.conf.base_dir }}"
+    restarted: true

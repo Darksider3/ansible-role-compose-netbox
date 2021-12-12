@@ -1,0 +1,22 @@
+---
+
+
+- name: create netbox directory
+  file:
+    path: "{{ netbox.conf.base_dir }}/env"
+    state: directory
+    recurse: true
+  notify: install required packages
+
+- name: update environment files
+  template:
+    src: "{{ item }}.j2"
+    dest: "{{ netbox.conf.base_dir }}/{{ item }}"
+  loop:
+    - env/netbox.env
+    - env/postgres.env
+    - env/redis.env
+    - env/redis-cache.env
+    - docker-compose.yml
+    - docker-compose.override.yml
+  notify: restart netbox

@@ -1,0 +1,75 @@
+---
+netbox:
+  conf:
+    metrics: "false"
+    secretkey: "r8OwDznj!!dci#P9ghmRfdu1Ysxm0AiPeDCQhKE+N_rClfWNj"
+
+    mail:
+      from: "netbox@bar.com"
+      password: ""
+      port: "25"
+      host: "localhost"
+      user: "netbox"
+      tls: "false"
+      timeout: 10 # seconds
+      ssl:
+        enabled: "false"
+        certfile: ""
+        keyfile: ""
+
+    user:
+      superuser:
+        name: "admin"
+        api_token: "0123456789abcdef0123456789abcdef01234567"
+        mail: "admin@example.com"
+        password: "admin"
+
+    hostnames:
+      main: "netbox"
+      worker: "netbox-worker"
+      housekeeper: "netbox-housekeeper"
+
+    napalm:
+      user: ""
+      password: ""
+      timeout: 10
+
+    base_dir: "/srv/netbox"
+    media_root: "/opt/netbox/netbox/media"
+
+
+  volumes:
+    main:
+      startup_scripts: "startup_scripts"
+      initializers: "initializers"
+      configuration: "configuration"
+      reports: "reports"
+      scripts: "scripts"
+      media_files: "netbox-media-files"
+    data:
+      postgres: "netbox-postgres-data"
+      redis: "netbox-redis-data"
+
+
+  envs:
+    netbox: "env/netbox.env"
+    postgres: "env/postgres.env"
+    redis: "env/redis.env"
+    redis_cache: "env/redis-cache.env"
+
+
+  services:
+    redis:
+      main:
+        password: "H733Kdjndks82"
+        hostname: "redis"
+
+      cache:
+        password: "T4Ph722qJ5QHeQ1qfu36"
+        hostname: "redis-cache"
+
+    postgres:
+      db: "netbox"
+      user: "netbox"
+      password: "J5brHrAXFLQSif0K"
+      hostname: "postgres"

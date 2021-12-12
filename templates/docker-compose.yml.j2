@@ -1,0 +1,77 @@
+version: '3.4'
+services:
+  netbox: &netbox
+    image: netboxcommunity/netbox:${VERSION-v3.1-1.5.1}
+    hostname: {{ netbox.conf.hostnames.main }}
+    depends_on:
+    - postgres
+    - redis
+    - redis-cache
+    - netbox-worker
+    env_file: {{ netbox.envs.netbox }}
+    user: 'unit:root'
+    volumes:
+    - {{ netbox.volumes.main.startup_scripts }}:/opt/netbox/startup_scripts:z,ro
+    - {{ netbox.volumes.main.initializers }}:/opt/netbox/initializers:z,ro
+    - {{ netbox.volumes.main.configuration }}:/etc/netbox/config:z,ro
+    - {{ netbox.volumes.main.reports }}:/etc/netbox/reports:z,ro
+    - {{ netbox.volumes.main.scripts }}:/etc/netbox/scripts:z,ro
+    - {{ netbox.volumes.main.media_files }}:/opt/netbox/netbox/media:z
+  netbox-worker:
+    <<: *netbox
+    hostname: {{ netbox.conf.hostnames.worker }}
+    depends_on:
+    - redis
+    - postgres
+    command:
+    - /opt/netbox/venv/bin/python
+    - /opt/netbox/netbox/manage.py
+    - rqworker
+  netbox-housekeeping:
+    <<: *netbox
+    hostname: {{ netbox.conf.hostnames.housekeeper }}
+    depends_on:
+    - redis
+    - postgres
+    command:
+    - /opt/netbox/housekeeping.sh
+
+  # postgres
+  postgres:
+    image: postgres:14-alpine
+    hostname: {{ netbox.services.postgres.hostname }}
+    env_file: {{ netbox.envs.postgres }}
+    volumes:
+    - {{ netbox.volumes.data.postgres }}:/var/lib/postgresql/data
+# {{ spam_login }}
+
+  # redis
+  redis:
+    image: redis:6-alpine
+    hostname: {{ netbox.services.redis.main.hostname }}
+    command:
+    - sh
+    - -c # this is to evaluate the $REDIS_PASSWORD from the env
+    - redis-server --appendonly yes --requirepass $$REDIS_PASSWORD ## $$ because of docker-compose
+    env_file: {{ netbox.envs.redis }}
+    volumes:
+    - {{ netbox.volumes.data.redis }}:/data
+  redis-cache:
+    image: redis:6-alpine
+    hostname: {{ netbox.services.redis.cache.hostname }}
+    command:
+    - sh
+    - -c # this is to evaluate the $REDIS_PASSWORD from the env
+    - redis-server --requirepass $$REDIS_PASSWORD ## $$ because of docker-compose
+    env_file: {{ netbox.envs.redis_cache }}
+
+volumes:
+  {% for key, volume in netbox.volumes.main.items() -%}
+  {{ volume }}:
+    driver: local
+  {% endfor -%}
+
+  {% for key, volume in netbox.volumes.data.items() -%}
+  {{ volume }}:
+    driver: local
+  {% endfor %}
