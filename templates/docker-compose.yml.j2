@@ -43,7 +43,6 @@ services:
     env_file: {{ netbox.envs.postgres }}
     volumes:
     - {{ netbox.volumes.data.postgres }}:/var/lib/postgresql/data
-# {{ spam_login }}
 
   # redis
   redis:
